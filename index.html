@@ -4,7 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#217346">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Домовид">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="График работы сотрудников магазина Домовид">
     <title>Домовид - График работы</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -105,6 +116,11 @@
         .admin-buttons button.secondary { background: #2980b9; }
         .admin-buttons button.new-month { background: #e67e22; }
         .admin-buttons button.logout { background: #7f8c8d; }
+        .admin-buttons button.install { background: #16a085; animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 160, 133, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(22, 160, 133, 0); }
+        }
         
         .viewer-controls {
             display: flex; flex-wrap: wrap; gap: 10px;
@@ -171,6 +187,20 @@
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-color { width: 16px; height: 16px; border: 1px solid #999; }
         
+        .install-banner {
+            display: none; position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%); background: #217346; color: white;
+            padding: 12px 20px; border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 999;
+            font-size: 14px; align-items: center; gap: 10px; max-width: 90%;
+        }
+        .install-banner.active { display: flex; }
+        .install-banner button {
+            background: white; color: #217346; border: none;
+            padding: 6px 14px; border-radius: 15px; cursor: pointer;
+            font-weight: bold; font-size: 13px;
+        }
+        
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.5);
@@ -216,7 +246,7 @@
         @media print {
             body { margin: 0; background: white; padding: 0; }
             .header { background: #217346 !important; -webkit-print-color-adjust: exact; }
-            .admin-panel, .viewer-controls, .legend, .admin-badge, .sync-status { display: none !important; }
+            .admin-panel, .viewer-controls, .legend, .admin-badge, .sync-status, .install-banner { display: none !important; }
             .table-wrapper { box-shadow: none; padding: 0; }
             .summary { box-shadow: none; }
             @page { size: landscape; margin: 1cm; }
@@ -268,7 +298,8 @@
             <div class="admin-section">
                 <div class="admin-section-title">💾 Данные</div>
                 <div class="admin-buttons">
-                    <button class="secondary" onclick="saveToFirebase()">💾 Сохранить в облако</button>
+                    <button class="secondary" onclick="saveToFirebase()">💾 Сохранить</button>
+                    <button class="install" id="btnInstall" onclick="installApp()" style="display:none;">📱 Установить приложение</button>
                     <button class="logout" onclick="logoutAdmin()">🚪 Выйти</button>
                 </div>
             </div>
@@ -310,8 +341,14 @@
         </div>
     </div>
 
+    <div class="install-banner" id="installBanner">
+        <span>📱 Установить как приложение?</span>
+        <button onclick="installApp()">Установить</button>
+        <button onclick="dismissInstall()" style="background:transparent; color:white;">✕</button>
+    </div>
+
 <script>
-    // ===== ТВОЯ КОНФИГУРАЦИЯ FIREBASE =====
+    // ===== FIREBASE КОНФИГУРАЦИЯ =====
     const firebaseConfig = {
         apiKey: "AIzaSyBYn224Sqv8LadHICuaveLKZCMwPQfMqCI",
         authDomain: "domovidi-grafik.firebaseapp.com",
@@ -326,12 +363,59 @@
     
     const ADMIN_PASSWORD = '1302';
     let isAdmin = false;
+    let deferredPrompt = null;
+    
     const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const WEEKDAYS = ['пн','вт','ср','чт','пт','сб','вс'];
     
     let state = { year: 2026, month: 11, hourlyRate: 230, employees: [] };
     let saveTimeout = null;
     let isLoading = true;
+    
+    // PWA установка
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallBanner();
+    });
+    
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        hideInstallBanner();
+        const btn = document.getElementById('btnInstall');
+        if (btn) btn.style.display = 'none';
+        alert('✅ Приложение установлено!');
+    });
+    
+    function showInstallBanner() {
+        if (window.matchMedia('(display-mode: standalone)').matches) return;
+        document.getElementById('installBanner').classList.add('active');
+        const btn = document.getElementById('btnInstall');
+        if (btn) btn.style.display = 'inline-block';
+    }
+    
+    function hideInstallBanner() {
+        document.getElementById('installBanner').classList.remove('active');
+    }
+    
+    function dismissInstall() { hideInstallBanner(); }
+    
+    async function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            hideInstallBanner();
+        } else {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            let msg = '';
+            if (isIOS) msg = '📱 Для установки на iPhone/iPad:\n\n1. Нажми "Поделиться" (квадрат со стрелкой) внизу Safari\n2. Выбери "На экран Домой"\n3. Нажми "Добавить"';
+            else if (isAndroid) msg = '📱 Для установки на Android:\n\n1. Открой меню браузера (⋮)\n2. Выбери "Установить приложение" или "Добавить на главный экран"';
+            else msg = '📱 Для установки на компьютер:\n\n1. Нажми ⋮ в правом верхнем углу Chrome\n2. Выбери "Установить Домовид" или "Добавить на рабочий стол"';
+            alert(msg);
+        }
+    }
     
     // Загрузка из Firebase
     async function loadFromFirebase() {
@@ -350,7 +434,7 @@
                 state.employees = [{ name: 'Ефименко Е', days: {} }];
                 await saveToFirebase();
             }
-            showSyncStatus('✅ Загружено из облака', 'saved');
+            showSyncStatus('✅ Загружено', 'saved');
         } catch (error) {
             console.error('Ошибка загрузки:', error);
             showSyncStatus('❌ Ошибка: ' + error.message, 'error');
@@ -359,7 +443,6 @@
         setTimeout(() => { hideSyncStatus(); isLoading = false; }, 2000);
     }
     
-    // Сохранение в Firebase
     async function saveToFirebase() {
         if (isLoading) return;
         showSyncStatus('💾 Сохранение...', 'saving');
@@ -371,10 +454,10 @@
                 employees: state.employees,
                 updatedAt: new Date().toISOString()
             });
-            showSyncStatus('✅ Сохранено в облако', 'saved');
+            showSyncStatus('✅ Сохранено', 'saved');
         } catch (error) {
             console.error('Ошибка сохранения:', error);
-            showSyncStatus('❌ Ошибка сохранения', 'error');
+            showSyncStatus('❌ Ошибка', 'error');
         }
         setTimeout(hideSyncStatus, 2000);
     }
