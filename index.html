@@ -4,116 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#217346">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Домовид - График">
-    <meta name="mobile-web-app-capable" content="yes">
     <title>Домовид - График работы</title>
     
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Домовид - График работы","short_name":"Домовид","start_url":".","display":"standalone","background_color":"%23f5f5f5","theme_color":"%23217346","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23217346%22 width=%22100%22 height=%22100%22 rx=%2220%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22%3E🏠%3C/text%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
-    <link rel="apple-touch-icon" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23217346%22 width=%22100%22 height=%22100%22 rx=%2220%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22%3E🏠%3C/text%3E%3C/svg%3E'>
-    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: Calibri, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-        }
+        body { font-family: Calibri, Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
         
-        /* ===== КРАСИВАЯ ШАПКА ===== */
         .header {
             background: linear-gradient(135deg, #1a5c38 0%, #217346 50%, #2d8f5e 100%);
-            color: white;
-            padding: 20px 25px;
+            color: white; padding: 20px 25px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
         .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%;
-        }
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: -60%;
-            left: -5%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 50%;
+            content: ''; position: absolute; top: -50%; right: -10%;
+            width: 300px; height: 300px;
+            background: rgba(255,255,255,0.05); border-radius: 50%;
         }
         .header-content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
+            position: relative; z-index: 1;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 15px;
         }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .header-logo {
-            font-size: 42px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-        .header-title {
-            display: flex;
-            flex-direction: column;
-        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-logo { font-size: 42px; }
+        .header-title { display: flex; flex-direction: column; }
         .header-title .shop-name {
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            margin: 0;
-            line-height: 1;
+            font-size: 32px; font-weight: bold; letter-spacing: 3px;
+            text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin: 0; line-height: 1;
         }
         .header-title .shop-subtitle {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-top: 4px;
-            letter-spacing: 1px;
+            font-size: 13px; opacity: 0.9; margin-top: 4px; letter-spacing: 1px;
         }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .header-right { display: flex; align-items: center; gap: 12px; }
         .header-month {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            padding: 10px 18px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 10px 18px; border-radius: 25px; font-size: 16px; font-weight: bold;
             border: 1px solid rgba(255,255,255,0.3);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .admin-badge {
-            display: inline-block;
-            background: #e74c3c;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: inline-block; background: #e74c3c; color: white;
+            padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold;
             animation: badgePulse 2s infinite;
         }
         @keyframes badgePulse {
@@ -121,407 +58,192 @@
             50% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
         }
         
-        /* ===== КОНТЕНТ ===== */
-        .content {
-            padding: 15px;
+        .sync-status {
+            position: fixed; top: 10px; right: 10px;
+            background: #217346; color: white; padding: 6px 12px;
+            border-radius: 15px; font-size: 11px; z-index: 100;
+            display: none;
         }
+        .sync-status.active { display: block; }
+        .sync-status.saving { background: #e67e22; }
+        .sync-status.saved { background: #217346; }
+        .sync-status.error { background: #e74c3c; }
         
-        /* ===== АДМИН ПАНЕЛЬ ===== */
+        .content { padding: 15px; }
+        
         .admin-panel {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #217346;
+            background: white; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px;
+            margin-bottom: 15px; border-left: 4px solid #217346;
         }
-        .admin-panel h3 {
-            margin: 0 0 12px 0;
-            color: #217346;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .admin-panel h3 { margin: 0 0 12px 0; color: #217346; font-size: 16px; }
         .admin-section {
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee;
         }
-        .admin-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
+        .admin-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .admin-section-title {
-            font-weight: bold;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 8px;
-            text-transform: uppercase;
+            font-weight: bold; font-size: 13px; color: #555;
+            margin-bottom: 8px; text-transform: uppercase;
         }
-        .admin-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
+        .admin-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .admin-row label {
-            font-weight: bold;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-weight: bold; font-size: 13px;
+            display: flex; align-items: center; gap: 6px;
         }
         .admin-row select, .admin-row input {
-            padding: 6px 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 6px 10px; font-size: 14px;
+            border: 1px solid #ccc; border-radius: 4px;
         }
         .admin-row input[type="number"] { width: 90px; }
-        
-        .admin-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .admin-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
         .admin-buttons button {
-            padding: 8px 14px;
-            background: #217346;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            white-space: nowrap;
+            padding: 8px 14px; background: #217346; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 13px;
         }
         .admin-buttons button:hover { background: #1a5c38; }
-        .admin-buttons button:active { transform: scale(0.97); }
         .admin-buttons button.danger { background: #c0392b; }
-        .admin-buttons button.danger:hover { background: #922b21; }
         .admin-buttons button.secondary { background: #2980b9; }
-        .admin-buttons button.secondary:hover { background: #1f618d; }
         .admin-buttons button.new-month { background: #e67e22; }
-        .admin-buttons button.new-month:hover { background: #d35400; }
         .admin-buttons button.logout { background: #7f8c8d; }
-        .admin-buttons button.logout:hover { background: #616a6b; }
-        .admin-buttons button.install { 
-            background: #16a085; 
-            animation: pulse 2s infinite;
-        }
-        .admin-buttons button.install:hover { background: #117a65; }
         
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 160, 133, 0.5); }
-            50% { box-shadow: 0 0 0 8px rgba(22, 160, 133, 0); }
-        }
-        
-        /* ===== КНОПКИ ПРОСМОТРА ===== */
         .viewer-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-            justify-content: flex-end;
+            display: flex; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 15px; justify-content: flex-end;
         }
         .viewer-controls button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            color: white;
+            padding: 8px 16px; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 14px; color: white;
         }
         .viewer-controls button.print { background: #8e44ad; }
-        .viewer-controls button.print:hover { background: #6c3483; }
         .viewer-controls button.pdf { background: #e74c3c; }
-        .viewer-controls button.pdf:hover { background: #a93226; }
         .viewer-controls button.admin { background: #217346; }
-        .viewer-controls button.admin:hover { background: #1a5c38; }
         
         .table-wrapper {
-            overflow-x: auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 8px;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: auto; background: white; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 8px;
         }
-        table {
-            border-collapse: collapse;
-            min-width: 100%;
-        }
+        table { border-collapse: collapse; min-width: 100%; }
         th, td {
-            border: 1px solid #999;
-            padding: 5px 6px;
-            text-align: center;
-            min-width: 30px;
-            font-size: 12px;
+            border: 1px solid #999; padding: 5px 6px;
+            text-align: center; min-width: 30px; font-size: 12px;
         }
         th { background: #d9e2f3; font-weight: bold; }
         .name-cell {
-            background: #90EE90;
-            font-weight: bold;
-            text-align: left;
-            padding: 6px 8px;
-            min-width: 130px;
-            position: relative;
+            background: #90EE90; font-weight: bold; text-align: left;
+            padding: 6px 8px; min-width: 130px; position: relative;
         }
         .name-cell input {
-            border: none;
-            background: transparent;
-            font-weight: bold;
-            font-size: 12px;
-            width: 100%;
-            outline: none;
+            border: none; background: transparent;
+            font-weight: bold; font-size: 12px; width: 100%; outline: none;
         }
-        .name-cell input:disabled { cursor: not-allowed; }
         .total-cell { background: #fff2cc; font-weight: bold; font-size: 13px; }
         .salary-cell { background: #e2efda; font-weight: bold; font-size: 13px; color: green; }
         .label-cell { background: #f2f2f2; font-weight: bold; }
         .weekend { color: red; }
-        
-        .hours-cell {
-            cursor: pointer;
-            position: relative;
-            font-weight: bold;
-            min-width: 30px;
-        }
+        .hours-cell { cursor: pointer; font-weight: bold; min-width: 30px; }
         .hours-cell:hover { background: #fffacd !important; }
-        .hours-cell.present-full { background: #90EE90; color: #000; }
-        .hours-cell.present-partial { background: #FFD700; color: #000; }
+        .hours-cell.present-full { background: #90EE90; }
+        .hours-cell.present-partial { background: #FFD700; }
         .hours-cell.absent { background: #FF6B6B; color: #fff; }
         .hours-cell.weekend-off { background: #E8E8E8; color: #999; }
-        
-        .hours-cell input {
-            width: 100%;
-            border: 2px solid #217346;
-            text-align: center;
-            font-size: 12px;
-            padding: 2px;
-            outline: none;
-        }
-        
         .locked .hours-cell { cursor: default !important; }
         .locked .hours-cell:hover { background: inherit !important; }
-        
         .delete-btn {
-            position: absolute;
-            right: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #c0392b;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            line-height: 1;
-            display: none;
+            position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+            background: #c0392b; color: white; border: none; border-radius: 50%;
+            width: 20px; height: 20px; cursor: pointer; font-size: 12px; display: none;
         }
         .name-cell:hover .delete-btn { display: block; }
         
         .summary {
-            margin-top: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 15px; padding: 12px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .summary h3 { margin: 0 0 10px 0; font-size: 16px; }
         .summary p { margin: 6px 0; font-size: 14px; }
         .highlight { font-weight: bold; color: #217346; }
         
         .legend {
-            margin-top: 12px;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            font-size: 11px;
+            margin-top: 12px; padding: 10px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px;
         }
         .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #999;
-            flex-shrink: 0;
-        }
+        .legend-color { width: 16px; height: 16px; border: 1px solid #999; }
         
-        /* Модальное окно */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 1000; justify-content: center; align-items: center; padding: 15px;
         }
         .modal-overlay.active { display: flex; }
         .modal {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
+            background: white; padding: 25px; border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            min-width: 280px;
-            max-width: 90%;
-            text-align: center;
+            min-width: 280px; max-width: 90%; text-align: center;
         }
         .modal h3 { margin-top: 0; color: #217346; font-size: 18px; }
-        .modal p { font-size: 14px; }
         .modal input {
-            width: 100%;
-            padding: 10px;
-            font-size: 18px;
-            border: 2px solid #ccc;
-            border-radius: 6px;
-            margin: 12px 0;
-            text-align: center;
-            letter-spacing: 5px;
+            width: 100%; padding: 10px; font-size: 18px;
+            border: 2px solid #ccc; border-radius: 6px;
+            margin: 12px 0; text-align: center; letter-spacing: 5px;
         }
-        .modal input:focus { border-color: #217346; outline: none; }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
         .modal button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            flex: 1;
+            padding: 10px 20px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 14px; flex: 1;
         }
         .modal button.confirm { background: #217346; color: white; }
-        .modal button.confirm:hover { background: #1a5c38; }
         .modal button.cancel { background: #95a5a6; color: white; }
-        .modal button.cancel:hover { background: #7f8c8d; }
         .error-msg { color: #e74c3c; font-size: 13px; margin-top: 5px; display: none; }
-        
-        /* Баннер установки */
-        .install-banner {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #217346;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 999;
-            font-size: 14px;
-            align-items: center;
-            gap: 10px;
-            max-width: 90%;
-        }
-        .install-banner.active { display: flex; }
-        .install-banner button {
-            background: white;
-            color: #217346;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        
-        /* АДАПТИВНОСТЬ */
-        @media (max-width: 1024px) {
-            .header { padding: 15px 20px; }
-            .header-logo { font-size: 36px; }
-            .header-title .shop-name { font-size: 26px; }
-            th, td { padding: 4px 5px; font-size: 11px; min-width: 28px; }
-            .name-cell { min-width: 110px; }
-        }
         
         @media (max-width: 768px) {
             .header { padding: 12px 15px; }
             .header-content { flex-direction: column; align-items: flex-start; }
             .header-logo { font-size: 32px; }
-            .header-title .shop-name { font-size: 22px; letter-spacing: 2px; }
-            .header-title .shop-subtitle { font-size: 11px; }
-            .header-month { font-size: 14px; padding: 8px 14px; }
-            .header-right { width: 100%; justify-content: flex-start; }
-            
+            .header-title .shop-name { font-size: 22px; }
+            .header-right { width: 100%; }
             .content { padding: 10px; }
-            .admin-panel { padding: 10px; }
             .admin-row { flex-direction: column; align-items: stretch; }
-            .admin-row label { justify-content: space-between; }
-            .admin-row select, .admin-row input { width: 100%; }
             .admin-buttons { flex-direction: column; }
-            .admin-buttons button { width: 100%; padding: 10px; }
-            
+            .admin-buttons button { width: 100%; }
             .viewer-controls { justify-content: center; }
             .viewer-controls button { flex: 1; min-width: 120px; }
-            
-            .table-wrapper { padding: 5px; }
             th, td { padding: 3px 4px; font-size: 10px; min-width: 26px; }
-            .name-cell { min-width: 90px; font-size: 11px; }
-            .name-cell input { font-size: 11px; }
-            .total-cell, .salary-cell { font-size: 11px; }
-            
-            .summary p { font-size: 13px; }
-            .legend { font-size: 10px; gap: 8px; }
-            .legend-color { width: 14px; height: 14px; }
-        }
-        
-        @media (max-width: 480px) {
-            .header-logo { font-size: 28px; }
-            .header-title .shop-name { font-size: 18px; letter-spacing: 1px; }
-            .header-month { font-size: 12px; padding: 6px 12px; }
-            th, td { padding: 2px 3px; font-size: 9px; min-width: 22px; }
-            .name-cell { min-width: 75px; }
+            .name-cell { min-width: 90px; }
         }
         
         @media print {
             body { margin: 0; background: white; padding: 0; }
-            .header { 
-                background: #217346 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                padding: 15px 20px;
-            }
-            .admin-panel, .viewer-controls, .legend, .admin-badge, .install-banner {
-                display: none !important;
-            }
+            .header { background: #217346 !important; -webkit-print-color-adjust: exact; }
+            .admin-panel, .viewer-controls, .legend, .admin-badge, .sync-status { display: none !important; }
             .table-wrapper { box-shadow: none; padding: 0; }
             .summary { box-shadow: none; }
-            .name-cell input { border: none; }
-            th, td { font-size: 10px; padding: 2px 4px; }
             @page { size: landscape; margin: 1cm; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== КРАСИВАЯ ШАПКА ===== -->
+    <div class="sync-status" id="syncStatus">💾 Загрузка...</div>
+
     <div class="header">
         <div class="header-content">
             <div class="header-left">
                 <div class="header-logo">🏠</div>
                 <div class="header-title">
                     <div class="shop-name">ДОМОВИД</div>
-                    <div class="shop-subtitle">Магазины домашнего уюта</div>
+                    <div class="shop-subtitle">Магазин строительных материалов</div>
                 </div>
             </div>
             <div class="header-right">
-                <div class="header-month" id="headerMonth">📅 Ноябрь 2026</div>
+                <div class="header-month" id="headerMonth">📅 Загрузка...</div>
                 <span id="adminBadge"></span>
             </div>
         </div>
     </div>
 
     <div class="content">
-        <!-- ===== АДМИН ПАНЕЛЬ ===== -->
         <div class="admin-panel" id="adminPanel" style="display:none;">
             <h3>⚙️ Панель администратора</h3>
             
@@ -538,7 +260,7 @@
                 <div class="admin-section-title">👥 Сотрудники</div>
                 <div class="admin-buttons">
                     <button onclick="addEmployee()">➕ Добавить сотрудника</button>
-                    <button class="new-month" onclick="createNewMonth()">📅 Создать новый месяц</button>
+                    <button class="new-month" onclick="createNewMonth()">📅 Новый месяц</button>
                     <button class="danger" onclick="clearAll()">🗑️ Очистить всё</button>
                 </div>
             </div>
@@ -546,20 +268,16 @@
             <div class="admin-section">
                 <div class="admin-section-title">💾 Данные</div>
                 <div class="admin-buttons">
-                    <button class="secondary" onclick="saveData()">💾 Сохранить</button>
-                    <button class="secondary" onclick="exportData()">📤 Экспорт</button>
-                    <button class="secondary" onclick="importData()">📥 Импорт</button>
+                    <button class="secondary" onclick="saveToFirebase()">💾 Сохранить в облако</button>
                     <button class="logout" onclick="logoutAdmin()">🚪 Выйти</button>
-                    <button class="install" id="btnInstall" onclick="installApp()" style="display:none;">📱 Установить</button>
                 </div>
             </div>
         </div>
 
-        <!-- ===== КНОПКИ ПРОСМОТРА ===== -->
         <div class="viewer-controls">
             <button class="admin" id="btnAdminLogin" onclick="showLoginModal()">🔐 Войти как админ</button>
             <button class="print" onclick="printSchedule()">🖨️ Печать</button>
-            <button class="pdf" onclick="downloadPDF()">📄 Скачать PDF</button>
+            <button class="pdf" onclick="downloadPDF()">📄 PDF</button>
         </div>
 
         <div id="printArea">
@@ -569,35 +287,20 @@
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
-
             <div class="summary" id="summary"></div>
-            
             <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #90EE90;"></div>
-                    <span>Отработал</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #FF6B6B;"></div>
-                    <span>Не вышел</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #FFD700;"></div>
-                    <span>Частично</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #E8E8E8;"></div>
-                    <span>Выходной</span>
-                </div>
+                <div class="legend-item"><div class="legend-color" style="background: #90EE90;"></div><span>Отработал</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #FF6B6B;"></div><span>Не вышел</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #FFD700;"></div><span>Частично</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #E8E8E8;"></div><span>Выходной</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно пароля -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
             <h3>🔐 Вход администратора</h3>
-            <p>Введите пароль для редактирования</p>
+            <p>Введите пароль</p>
             <input type="password" id="adminPassword" placeholder="••••" maxlength="10" inputmode="numeric">
             <div class="error-msg" id="errorMsg">❌ Неверный пароль!</div>
             <div class="modal-buttons">
@@ -607,177 +310,86 @@
         </div>
     </div>
 
-    <!-- Баннер установки -->
-    <div class="install-banner" id="installBanner">
-        <span>📱 Установить как приложение?</span>
-        <button onclick="installApp()">Установить</button>
-        <button onclick="dismissInstall()" style="background:transparent; color:white;">✕</button>
-    </div>
-
 <script>
-    const ADMIN_PASSWORD = '1302';
-    let isAdmin = false;
-    let deferredPrompt = null;
-    
-    const MONTHS = [
-        'Январь','Февраль','Март','Апрель','Май','Июнь',
-        'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'
-    ];
-    const WEEKDAYS = ['пн','вт','ср','чт','пт','сб','вс'];
-    
-    let state = {
-        year: 2026,
-        month: 11,
-        hourlyRate: 230,
-        employees: []
+    // ===== ТВОЯ КОНФИГУРАЦИЯ FIREBASE =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyBYn224Sqv8LadHICuaveLKZCMwPQfMqCI",
+        authDomain: "domovidi-grafik.firebaseapp.com",
+        projectId: "domovidi-grafik",
+        storageBucket: "domovidi-grafik.firebasestorage.app",
+        messagingSenderId: "1009524533741",
+        appId: "1:1009524533741:web:1a0b0a904593b905e49fe4"
     };
     
-    // PWA
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        showInstallBanner();
-    });
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
     
-    window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
-        hideInstallBanner();
-        const btn = document.getElementById('btnInstall');
-        if (btn) btn.style.display = 'none';
-    });
+    const ADMIN_PASSWORD = '1302';
+    let isAdmin = false;
+    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const WEEKDAYS = ['пн','вт','ср','чт','пт','сб','вс'];
     
-    function showInstallBanner() {
-        if (window.matchMedia('(display-mode: standalone)').matches) return;
-        document.getElementById('installBanner').classList.add('active');
-        const btn = document.getElementById('btnInstall');
-        if (btn) btn.style.display = 'inline-block';
-    }
+    let state = { year: 2026, month: 11, hourlyRate: 230, employees: [] };
+    let saveTimeout = null;
+    let isLoading = true;
     
-    function hideInstallBanner() {
-        document.getElementById('installBanner').classList.remove('active');
-    }
-    
-    function dismissInstall() { hideInstallBanner(); }
-    
-    async function installApp() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            hideInstallBanner();
-        } else {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isAndroid = /Android/.test(navigator.userAgent);
-            let msg = '';
-            if (isIOS) msg = '📱 Для установки на iPhone/iPad:\n\n1. Нажми "Поделиться" (квадрат со стрелкой) внизу Safari\n2. Выбери "На экран Домой"\n3. Нажми "Добавить"';
-            else if (isAndroid) msg = '📱 Для установки на Android:\n\n1. Открой меню браузера (⋮)\n2. Выбери "Установить приложение" или "Добавить на главный экран"';
-            else msg = '📱 Для установки на компьютер:\n\n1. Нажми иконку установки в адресной строке\n2. Или: Меню → "Установить приложение"';
-            alert(msg);
-        }
-    }
-    
-    function loadData() {
-        const saved = localStorage.getItem('workSchedule');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (parsed && parsed.employees) state = parsed;
-            } catch(e) { console.log('Ошибка загрузки'); }
-        }
-        if (!state.employees || state.employees.length === 0) {
+    // Загрузка из Firebase
+    async function loadFromFirebase() {
+        showSyncStatus('💾 Загрузка...', 'saving');
+        try {
+            const doc = await db.collection('schedules').doc('current').get();
+            if (doc.exists) {
+                const data = doc.data();
+                state = {
+                    year: data.year || 2026,
+                    month: data.month || 11,
+                    hourlyRate: data.hourlyRate || 230,
+                    employees: data.employees || []
+                };
+            } else {
+                state.employees = [{ name: 'Ефименко Е', days: {} }];
+                await saveToFirebase();
+            }
+            showSyncStatus('✅ Загружено из облака', 'saved');
+        } catch (error) {
+            console.error('Ошибка загрузки:', error);
+            showSyncStatus('❌ Ошибка: ' + error.message, 'error');
             state.employees = [{ name: 'Ефименко Е', days: {} }];
         }
+        setTimeout(() => { hideSyncStatus(); isLoading = false; }, 2000);
     }
     
-    function saveData() {
-        localStorage.setItem('workSchedule', JSON.stringify(state));
-        alert('✅ Данные сохранены!');
+    // Сохранение в Firebase
+    async function saveToFirebase() {
+        if (isLoading) return;
+        showSyncStatus('💾 Сохранение...', 'saving');
+        try {
+            await db.collection('schedules').doc('current').set({
+                year: state.year,
+                month: state.month,
+                hourlyRate: state.hourlyRate,
+                employees: state.employees,
+                updatedAt: new Date().toISOString()
+            });
+            showSyncStatus('✅ Сохранено в облако', 'saved');
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+            showSyncStatus('❌ Ошибка сохранения', 'error');
+        }
+        setTimeout(hideSyncStatus, 2000);
     }
     
     function autoSave() {
-        localStorage.setItem('workSchedule', JSON.stringify(state));
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => { if (isAdmin) saveToFirebase(); }, 1000);
     }
     
-    function exportData() {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
-        const dataStr = JSON.stringify(state, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Домовид_График_${MONTHS[state.month-1]}_${state.year}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        alert('✅ Данные экспортированы!');
+    function showSyncStatus(text, className) {
+        const status = document.getElementById('syncStatus');
+        status.textContent = text;
+        status.className = 'sync-status active ' + className;
     }
-    
-    function importData() {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if (imported && imported.employees) {
-                        state = imported;
-                        autoSave();
-                        initMonthSelect();
-                        document.getElementById('yearInput').value = state.year;
-                        document.getElementById('hourlyRate').value = state.hourlyRate;
-                        updateHeaderMonth();
-                        render();
-                        alert('✅ Данные импортированы!');
-                    } else {
-                        alert('❌ Неверный формат файла!');
-                    }
-                } catch(err) {
-                    alert('❌ Ошибка чтения файла: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-    
-    function createNewMonth() {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
-        
-        const action = confirm(
-            'Создать новый месяц?\n\n' +
-            'ОК — создать пустой месяц (сохранить сотрудников, очистить дни)\n' +
-            'Отмена — перейти к следующему месяцу'
-        );
-        
-        if (action) {
-            state.employees.forEach(emp => { emp.days = {}; });
-        } else {
-            state.month++;
-            if (state.month > 12) {
-                state.month = 1;
-                state.year++;
-            }
-        }
-        
-        autoSave();
-        initMonthSelect();
-        document.getElementById('yearInput').value = state.year;
-        updateHeaderMonth();
-        render();
-    }
-    
-    function clearAll() {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
-        if (confirm('Удалить всех сотрудников и сбросить данные?')) {
-            state.employees = [{ name: 'Ефименко Е', days: {} }];
-            localStorage.removeItem('workSchedule');
-            render();
-        }
-    }
+    function hideSyncStatus() { document.getElementById('syncStatus').classList.remove('active'); }
     
     function showLoginModal() {
         document.getElementById('loginModal').classList.add('active');
@@ -786,10 +398,7 @@
         document.getElementById('errorMsg').style.display = 'none';
         setTimeout(() => pwdInput.focus(), 100);
     }
-    
-    function closeLoginModal() {
-        document.getElementById('loginModal').classList.remove('active');
-    }
+    function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); }
     
     function checkPassword() {
         const pwd = document.getElementById('adminPassword').value;
@@ -810,7 +419,6 @@
         isAdmin = false;
         updateAdminUI();
         render();
-        alert('🚪 Вы вышли из режима администратора.');
     }
     
     function updateAdminUI() {
@@ -832,10 +440,8 @@
         }
     }
     
-    // Обновить месяц в шапке
     function updateHeaderMonth() {
-        const headerMonth = document.getElementById('headerMonth');
-        headerMonth.textContent = `📅 ${MONTHS[state.month-1]} ${state.year}`;
+        document.getElementById('headerMonth').textContent = `📅 ${MONTHS[state.month-1]} ${state.year}`;
     }
     
     function initMonthSelect() {
@@ -862,24 +468,20 @@
         render();
         autoSave();
     };
-    
     document.getElementById('hourlyRate').onchange = (e) => {
         state.hourlyRate = parseFloat(e.target.value) || 0;
         recalculateAll();
         autoSave();
     };
     
-    function getDaysInMonth(year, month) {
-        return new Date(year, month, 0).getDate();
-    }
-    
+    function getDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
     function getWeekday(year, month, day) {
         const d = new Date(year, month - 1, day).getDay();
         return d === 0 ? 6 : d - 1;
     }
     
     function addEmployee() {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
+        if (!isAdmin) return;
         const name = prompt('Введите имя сотрудника:', 'Новый сотрудник');
         if (name) {
             state.employees.push({ name: name, days: {} });
@@ -889,12 +491,10 @@
     }
     
     function deleteEmployee(index) {
-        if (!isAdmin) { alert('🔒 Только администратор!'); return; }
-        if (confirm(`Удалить сотрудника "${state.employees[index].name}"?`)) {
+        if (!isAdmin) return;
+        if (confirm(`Удалить "${state.employees[index].name}"?`)) {
             state.employees.splice(index, 1);
-            if (state.employees.length === 0) {
-                state.employees = [{ name: 'Ефименко Е', days: {} }];
-            }
+            if (state.employees.length === 0) state.employees = [{ name: 'Ефименко Е', days: {} }];
             render();
             autoSave();
         }
@@ -918,13 +518,8 @@
         autoSave();
     }
     
-    function getTotalPlanned(emp) {
-        return Object.values(emp.days).reduce((sum, d) => sum + (d.planned || 0), 0);
-    }
-    
-    function getTotalActual(emp) {
-        return Object.values(emp.days).reduce((sum, d) => sum + (d.present ? (d.actual || 0) : 0), 0);
-    }
+    function getTotalPlanned(emp) { return Object.values(emp.days).reduce((s, d) => s + (d.planned || 0), 0); }
+    function getTotalActual(emp) { return Object.values(emp.days).reduce((s, d) => s + (d.present ? (d.actual || 0) : 0), 0); }
     
     function recalculateAll() {
         renderSummary();
@@ -932,13 +527,38 @@
             const planned = getTotalPlanned(emp);
             const actual = getTotalActual(emp);
             const salary = actual * state.hourlyRate;
-            const plannedCell = document.getElementById(`planned-${i}`);
-            const actualCell = document.getElementById(`actual-${i}`);
-            const salaryCell = document.getElementById(`salary-${i}`);
-            if (plannedCell) plannedCell.textContent = planned;
-            if (actualCell) actualCell.textContent = actual;
-            if (salaryCell) salaryCell.textContent = salary.toLocaleString('ru-RU') + ' руб.';
+            const p = document.getElementById(`planned-${i}`);
+            const a = document.getElementById(`actual-${i}`);
+            const s = document.getElementById(`salary-${i}`);
+            if (p) p.textContent = planned;
+            if (a) a.textContent = actual;
+            if (s) s.textContent = salary.toLocaleString('ru-RU') + ' руб.';
         });
+    }
+    
+    function createNewMonth() {
+        if (!isAdmin) return;
+        const action = confirm('ОК — очистить дни\nОтмена — следующий месяц');
+        if (action) {
+            state.employees.forEach(emp => { emp.days = {}; });
+        } else {
+            state.month++;
+            if (state.month > 12) { state.month = 1; state.year++; }
+        }
+        autoSave();
+        initMonthSelect();
+        document.getElementById('yearInput').value = state.year;
+        updateHeaderMonth();
+        render();
+    }
+    
+    function clearAll() {
+        if (!isAdmin) return;
+        if (confirm('Удалить всех сотрудников?')) {
+            state.employees = [{ name: 'Ефименко Е', days: {} }];
+            saveToFirebase();
+            render();
+        }
     }
     
     function render() {
@@ -960,8 +580,8 @@
         }
         
         thead.innerHTML = `<tr>${daysHeader}</tr><tr>${weekdaysHeader}</tr>`;
-        
         tbody.innerHTML = '';
+        
         state.employees.forEach((emp, empIndex) => {
             const planned = getTotalPlanned(emp);
             const actual = getTotalActual(emp);
@@ -969,39 +589,22 @@
             
             let row = `<tr>
                 <td class="name-cell">
-                    <input type="text" value="${emp.name}" 
-                           onchange="changeName(${empIndex}, this.value)"
-                           ${isAdmin ? '' : 'disabled'}>
-                    ${isAdmin ? `<button class="delete-btn" onclick="deleteEmployee(${empIndex})" title="Удалить">×</button>` : ''}
+                    <input type="text" value="${emp.name}" onchange="changeName(${empIndex}, this.value)" ${isAdmin ? '' : 'disabled'}>
+                    ${isAdmin ? `<button class="delete-btn" onclick="deleteEmployee(${empIndex})">×</button>` : ''}
                 </td>`;
             
             for (let d = 1; d <= daysInMonth; d++) {
                 const dayData = emp.days[d] || { planned: 0, actual: 0, present: false };
                 const wd = getWeekday(state.year, state.month, d);
                 const isWeekend = wd >= 5;
-                
                 let cellClass = 'hours-cell';
                 let displayValue = '';
                 
-                if (dayData.planned === 0 && isWeekend && !dayData.present) {
-                    cellClass += ' weekend-off';
-                    displayValue = '';
-                }
-                else if (!dayData.present && dayData.planned > 0) {
-                    cellClass += ' absent';
-                    displayValue = dayData.planned;
-                }
-                else if (dayData.present && dayData.actual >= dayData.planned) {
-                    cellClass += ' present-full';
-                    displayValue = dayData.actual;
-                }
-                else if (dayData.present && dayData.actual < dayData.planned) {
-                    cellClass += ' present-partial';
-                    displayValue = dayData.actual;
-                }
-                else {
-                    displayValue = dayData.planned || '';
-                }
+                if (dayData.planned === 0 && isWeekend && !dayData.present) { cellClass += ' weekend-off'; }
+                else if (!dayData.present && dayData.planned > 0) { cellClass += ' absent'; displayValue = dayData.planned; }
+                else if (dayData.present && dayData.actual >= dayData.planned) { cellClass += ' present-full'; displayValue = dayData.actual; }
+                else if (dayData.present && dayData.actual < dayData.planned) { cellClass += ' present-partial'; displayValue = dayData.actual; }
+                else { displayValue = dayData.planned || ''; }
                 
                 const clickHandler = isAdmin ? `onclick="editCell(this, ${empIndex}, ${d})"` : '';
                 row += `<td class="${cellClass}" ${clickHandler}>${displayValue}</td>`;
@@ -1020,25 +623,21 @@
     function editCell(cell, empIndex, day) {
         if (!isAdmin) return;
         if (cell.querySelector('input')) return;
-        
         const dayData = state.employees[empIndex].days[day] || { planned: 0, actual: 0, present: false };
         
-        const html = `
+        cell.innerHTML = `
             <div style="padding: 5px;">
-                <label style="display: block; margin-bottom: 5px; font-size: 11px;">
+                <label style="display:block;margin-bottom:5px;font-size:11px;">
                     <input type="checkbox" id="present-${day}" ${dayData.present ? 'checked' : ''}> Вышел
                 </label>
-                <label style="display: block; margin-bottom: 5px; font-size: 11px;">
-                    План: <input type="number" id="planned-${day}" value="${dayData.planned}" min="0" max="24" style="width: 50px;">
+                <label style="display:block;margin-bottom:5px;font-size:11px;">
+                    План: <input type="number" id="planned-${day}" value="${dayData.planned}" min="0" max="24" style="width:50px;">
                 </label>
-                <label style="display: block; margin-bottom: 5px; font-size: 11px;">
-                    Факт: <input type="number" id="actual-${day}" value="${dayData.actual}" min="0" max="24" style="width: 50px;">
+                <label style="display:block;margin-bottom:5px;font-size:11px;">
+                    Факт: <input type="number" id="actual-${day}" value="${dayData.actual}" min="0" max="24" style="width:50px;">
                 </label>
                 <button id="ok-btn-${day}" style="background:#217346;color:white;border:none;border-radius:3px;padding:3px 8px;cursor:pointer;font-size:11px;width:100%;">✓ OK</button>
-            </div>
-        `;
-        
-        cell.innerHTML = html;
+            </div>`;
         
         const presentInput = document.getElementById(`present-${day}`);
         const plannedInput = document.getElementById(`planned-${day}`);
@@ -1049,29 +648,21 @@
         plannedInput.select();
         
         const finish = () => {
-            const present = presentInput.checked;
-            const planned = parseInt(plannedInput.value) || 0;
-            const actual = parseInt(actualInput.value) || 0;
-            updateDay(empIndex, day, { present, planned, actual });
+            updateDay(empIndex, day, {
+                present: presentInput.checked,
+                planned: parseInt(plannedInput.value) || 0,
+                actual: parseInt(actualInput.value) || 0
+            });
             render();
         };
         
-        const handleKey = (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); finish(); }
-            if (e.key === 'Escape') render();
-        };
-        
+        const handleKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); finish(); } if (e.key === 'Escape') render(); };
         presentInput.addEventListener('keydown', handleKey);
         plannedInput.addEventListener('keydown', handleKey);
         actualInput.addEventListener('keydown', handleKey);
         okBtn.addEventListener('click', (e) => { e.stopPropagation(); finish(); });
         
-        const outsideClick = (e) => {
-            if (!cell.contains(e.target)) {
-                finish();
-                document.removeEventListener('click', outsideClick);
-            }
-        };
+        const outsideClick = (e) => { if (!cell.contains(e.target)) { finish(); document.removeEventListener('click', outsideClick); } };
         setTimeout(() => document.addEventListener('click', outsideClick), 100);
     }
     
@@ -1079,7 +670,6 @@
         const summary = document.getElementById('summary');
         let html = `<h3>📊 Сводка за ${MONTHS[state.month-1]} ${state.year}</h3>`;
         html += `<p>💰 <span class="highlight">Ставка:</span> ${state.hourlyRate} руб/час</p>`;
-        
         let grandTotal = 0;
         state.employees.forEach(emp => {
             const planned = getTotalPlanned(emp);
@@ -1088,11 +678,8 @@
             grandTotal += salary;
             html += `<p>👤 <span class="highlight">${emp.name}:</span> План: ${planned} ч | Факт: ${actual} ч × ${state.hourlyRate} = <b>${salary.toLocaleString('ru-RU')} руб.</b></p>`;
         });
-        
         html += `<p style="border-top:2px solid #217346; padding-top:10px; margin-top:10px;">
-            💵 <span class="highlight">Итого:</span> <b style="font-size:18px; color:green;">${grandTotal.toLocaleString('ru-RU')} руб.</b>
-        </p>`;
-        
+            💵 <span class="highlight">Итого:</span> <b style="font-size:18px; color:green;">${grandTotal.toLocaleString('ru-RU')} руб.</b></p>`;
         summary.innerHTML = html;
     }
     
@@ -1101,44 +688,27 @@
     function downloadPDF() {
         const element = document.getElementById('printArea');
         const filename = `Домовид_График_${MONTHS[state.month-1]}_${state.year}.pdf`;
-        const opt = {
-            margin: 0.5, filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        };
+        const opt = { margin: 0.5, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
         const btn = event.target;
         const originalText = btn.textContent;
-        btn.textContent = '⏳ ...';
-        btn.disabled = true;
+        btn.textContent = '⏳ ...'; btn.disabled = true;
         html2pdf().set(opt).from(element).save().then(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-            alert('✅ PDF сохранён: ' + filename);
-        }).catch(err => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-            alert('❌ Ошибка: ' + err.message);
-        });
+            btn.textContent = originalText; btn.disabled = false; alert('✅ PDF сохранён!');
+        }).catch(err => { btn.textContent = originalText; btn.disabled = false; alert('❌ Ошибка: ' + err.message); });
     }
     
-    document.getElementById('adminPassword').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') checkPassword();
-        if (e.key === 'Escape') closeLoginModal();
-    });
+    document.getElementById('adminPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPassword(); if (e.key === 'Escape') closeLoginModal(); });
+    document.getElementById('loginModal').addEventListener('click', (e) => { if (e.target.id === 'loginModal') closeLoginModal(); });
     
-    document.getElementById('loginModal').addEventListener('click', (e) => {
-        if (e.target.id === 'loginModal') closeLoginModal();
+    // Запуск
+    loadFromFirebase().then(() => {
+        initMonthSelect();
+        document.getElementById('yearInput').value = state.year;
+        document.getElementById('hourlyRate').value = state.hourlyRate;
+        updateHeaderMonth();
+        updateAdminUI();
+        render();
     });
-    
-    // Инициализация
-    loadData();
-    initMonthSelect();
-    document.getElementById('yearInput').value = state.year;
-    document.getElementById('hourlyRate').value = state.hourlyRate;
-    updateHeaderMonth();
-    updateAdminUI();
-    render();
 </script>
 
 </body>
